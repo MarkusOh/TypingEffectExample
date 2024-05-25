@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    // This function is inspired and copied by the velog.io post from URL https://velog.io/@heunb/Korean-Typo-animation
     func disassembleUnicode(_ char: UInt32) -> [UnicodeScalar] {
         // Guard against non-Korean characters and out of range values
         guard (0xAC00...0xD7A3).contains(char) else {
