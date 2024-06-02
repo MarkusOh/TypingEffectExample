@@ -33,11 +33,17 @@ struct ContentView: View {
     }
     
     @State private var text = ""
+    @State private var index = 0
     
     var body: some View {
         GeometryReader { proxy in
-            Text(text)
-                .font(.title)
+            VerticalCarousel(selectedIndex: index) {
+                ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { (eachIndex, eachText) in
+                    Text(eachText)
+                        .scaleEffect(eachIndex == index ? 1 : 0.5, anchor: .leading)
+                }
+            }
+                .font(.system(size: 60).bold())
                 .padding()
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
                 .overlay(alignment: .bottom) {
@@ -45,12 +51,25 @@ struct ContentView: View {
                         Task {
                             var trackedString = ""
                             
-                            for char in Array("안녕하세요 저는 오승섭입니다.\nThings are here for good") {
+                            for char in Array(
+                            """
+                            
+                            """) {
                                 let scalar = char.unicodeScalars
                                 let uInt = scalar[scalar.startIndex].value
                                 for character in disassembleUnicode(uInt) {
+                                    if character == "\n" {
+                                        try? await Task.sleep(for: .seconds(0.5))
+                                    } else {
+                                        try? await Task.sleep(for: .seconds(0.025))
+                                    }
                                     
-                                    try? await Task.sleep(for: .seconds(0.2))
+                                    if character == "\n" {
+                                        withAnimation {
+                                            index += 1
+                                        }
+                                    }
+                                    
                                     trackedString += "\(character)"
                                     text = trackedString
                                 }
@@ -59,6 +78,47 @@ struct ContentView: View {
                     }
                 }
         }
+    }
+}
+
+struct VerticalCarousel: Layout {
+    var selectedIndex: Int
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let selectedIndex = Self.clamp(value: selectedIndex, to: 1...subviews.count)
+        var y = 0.0
+        let proposal: ProposedViewSize = .init(width: bounds.width, height: bounds.height)
+        
+        // get initial y placement
+        for (index, upperSubview) in subviews.prefix(upTo: selectedIndex - 1).enumerated() {
+            let size = upperSubview.sizeThatFits(proposal)
+            let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
+            y -= (size.height / 2 + nextHeight / 2)
+        }
+        
+        // place each subview in vertical order
+        for (index, subview) in subviews.enumerated() {
+            let size = subview.sizeThatFits(proposal)
+            subview.place(at: .init(x: bounds.minX, y: y + bounds.midY), anchor: .leading, proposal: proposal)
+            
+            let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
+            y += (size.height / 2 + nextHeight / 2)
+        }
+    }
+    
+    static func clamp(value: Int, to limits: ClosedRange<Int>) -> Int {
+        return min(max(value, limits.lowerBound), limits.upperBound)
+    }
+}
+
+extension Collection {
+    /// Returns the element at the specified index if it is within bounds, otherwise nil.
+    subscript (safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }
 
