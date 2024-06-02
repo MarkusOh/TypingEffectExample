@@ -8,6 +8,99 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var text = ""
+    @State private var index = 0
+    @State private var animationTask: Task<Void, Error>?
+    
+    let renderWidth = 1920.0
+    let renderHeight = 1080.0
+    
+    var displayableTexts: [(Int, String)] {
+        Array(text.components(separatedBy: "\n").enumerated())
+    }
+    
+    var renderable: some View {
+        VerticalCarousel(selectedIndex: index) {
+            ForEach(displayableTexts, id: \.0) { (_, text) in
+                HidableText(text: text)
+            }
+        }
+        .font(.system(size: 60).bold())
+        .frame(width: renderWidth, height: renderHeight)
+    }
+    
+    @MainActor
+    var imageRenderer: ImageRenderer<some View> {
+        ImageRenderer(content: renderable)
+    }
+    
+    var body: some View {
+        previewWindow
+            .overlay(alignment: .bottom) {
+                VStack {
+                    startAnimatingButton
+                    captureImageButton
+                }
+            }
+    }
+    
+    var previewWindow: some View {
+        GeometryReader { proxy in
+            renderable
+                .scaleEffect(x: proxy.size.width / renderWidth, y: proxy.size.height / renderHeight, anchor: .topLeading)
+        }
+    }
+    
+    var startAnimatingButton: some View {
+        Button("Start Animating") {
+            if let animationTask {
+                text = ""
+                animationTask.cancel()
+            }
+            
+            animationTask = Task {
+                var trackedString = ""
+                
+                for char in Array(Self.data) {
+                    let scalar = char.unicodeScalars
+                    let uInt = scalar[scalar.startIndex].value
+                    for character in disassembleUnicode(uInt) {
+                        if character == "\n" {
+                            try? await Task.sleep(for: .seconds(0.1))
+                        } else {
+                            try? await Task.sleep(for: .seconds(0.025))
+                        }
+                        
+                        if character == "\n" {
+                            withAnimation {
+                                index += 1
+                            }
+                        }
+                        
+                        trackedString += "\(character)"
+                        text = trackedString
+                    }
+                }
+            }
+        }
+    }
+    
+    var captureImageButton: some View {
+        Button("Capture Image") {
+            Task { @MainActor in
+                guard let image = imageRenderer.uiImage ,
+                      let transparentImageData = image.pngData(),
+                      let transparentImage = UIImage(data: transparentImageData) else {
+                    return
+                }
+                
+                UIImageWriteToSavedPhotosAlbum(transparentImage, nil, nil, nil)
+            }
+        }
+    }
+}
+
+extension ContentView {
     // This function is inspired and copied by the velog.io post from URL https://velog.io/@heunb/Korean-Typo-animation
     func disassembleUnicode(_ char: UInt32) -> [UnicodeScalar] {
         // Guard against non-Korean characters and out of range values
@@ -32,53 +125,20 @@ struct ContentView: View {
         return arr
     }
     
-    @State private var text = ""
-    @State private var index = 0
-    
-    var body: some View {
-        GeometryReader { proxy in
-            VerticalCarousel(selectedIndex: index) {
-                ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { (eachIndex, eachText) in
-                    Text(eachText)
-                        .scaleEffect(eachIndex == index ? 1 : 0.5, anchor: .leading)
-                }
-            }
-                .font(.system(size: 60).bold())
-                .padding()
-                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
-                .overlay(alignment: .bottom) {
-                    Button("Start Animating") {
-                        Task {
-                            var trackedString = ""
-                            
-                            for char in Array(
-                            """
-                            
-                            """) {
-                                let scalar = char.unicodeScalars
-                                let uInt = scalar[scalar.startIndex].value
-                                for character in disassembleUnicode(uInt) {
-                                    if character == "\n" {
-                                        try? await Task.sleep(for: .seconds(0.5))
-                                    } else {
-                                        try? await Task.sleep(for: .seconds(0.025))
-                                    }
-                                    
-                                    if character == "\n" {
-                                        withAnimation {
-                                            index += 1
-                                        }
-                                    }
-                                    
-                                    trackedString += "\(character)"
-                                    text = trackedString
-                                }
-                            }
-                        }
-                    }
-                }
-        }
-    }
+    static let data = """
+                      당신은 사랑받기 위해 태어난 사람
+                      당신의 삶속에서 그 사랑 받고 있지요
+                      당신은 사랑 받기 위해 태어난 사람
+                      지금도 그 사랑 받고 있지요
+                      태초부터 시작된 하나님의 사랑은
+                      우리의 만남을 통해 열매를 맺고
+                      당신이 이 세상에 존재함으로 인해
+                      우리에  얼마나 큰 기쁨이 되는지
+                      당신은 사랑받기 위해 태어난 사람
+                      지금도 그 사랑 받고 있지요
+                      당신은 사랑받기 위해 태어난 사람
+                      지금도 그 사랑 받고 있지요
+                      """
 }
 
 struct VerticalCarousel: Layout {
