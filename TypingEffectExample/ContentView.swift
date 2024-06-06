@@ -30,6 +30,7 @@ struct ContentView: View {
     let renderHeight = 1080.0
     
     @State var displayableTexts = [UniqueText]()
+    @State var isRecording = false
     
     var renderable: some View {
         VerticalCarousel(selectedIndex: index) {
@@ -39,6 +40,8 @@ struct ContentView: View {
         }
         .font(.system(size: 60).bold())
         .frame(width: renderWidth, height: renderHeight)
+        .foregroundStyle(Color.black)
+        .background(Color.white)
     }
     
     @MainActor
@@ -48,18 +51,30 @@ struct ContentView: View {
     
     var body: some View {
         previewWindow
+            .padding(5)
             .overlay(alignment: .bottom) {
                 VStack {
                     startAnimatingButton
                     captureImageButton
                 }
             }
+            .background(Color.black, ignoresSafeAreaEdges: .all)
     }
     
     var previewWindow: some View {
         GeometryReader { proxy in
+            let borderOffset = 14.0
+            let renderWidth = renderWidth + borderOffset
+            let renderHeight = renderHeight + borderOffset
+            let adjustedAspectRatioWidth = (renderWidth / renderHeight) / (proxy.size.width / proxy.size.height)
+            let adjustedAspectRatioHeight = (renderHeight / renderWidth) / (proxy.size.height / proxy.size.width)
+            let adjustedWidth = proxy.size.width / renderWidth * (proxy.size.width > proxy.size.height ? adjustedAspectRatioWidth : 1)
+            let adjustedHeight = proxy.size.height / renderHeight * (proxy.size.height > proxy.size.width ? adjustedAspectRatioHeight : 1)
+            
             renderable
-                .scaleEffect(x: proxy.size.width / renderWidth, y: proxy.size.height / renderHeight, anchor: .topLeading)
+                .padding(borderOffset)
+                .border(isRecording ? Color.red : .gray, width: borderOffset)
+                .scaleEffect(x: adjustedWidth, y: adjustedHeight, anchor: .topLeading)
         }
     }
     
