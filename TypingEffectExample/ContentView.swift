@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    let writer: ImageAnimator = .init(renderSettings: .init())
+    
     func set(text: String) {
         guard text.isEmpty == false else {
             displayableTexts = [UniqueText]()
@@ -41,7 +43,7 @@ struct ContentView: View {
         .font(.system(size: 60).bold())
         .frame(width: renderWidth, height: renderHeight)
         .foregroundStyle(Color.black)
-        .background(Color.white)
+        .background(Color.clear)
     }
     
     @MainActor
@@ -56,6 +58,7 @@ struct ContentView: View {
                 VStack {
                     startAnimatingButton
                     captureImageButton
+                    startRecordingButton
                 }
             }
             .background(Color.black, ignoresSafeAreaEdges: .all)
@@ -72,6 +75,7 @@ struct ContentView: View {
             let adjustedHeight = proxy.size.height / renderHeight * (proxy.size.height > proxy.size.width ? adjustedAspectRatioHeight : 1)
             
             renderable
+                .background(Color.white)
                 .padding(borderOffset)
                 .border(isRecording ? Color.red : .gray, width: borderOffset)
                 .scaleEffect(x: adjustedWidth, y: adjustedHeight, anchor: .topLeading)
@@ -79,41 +83,45 @@ struct ContentView: View {
     }
     
     var startAnimatingButton: some View {
-        Button("Start Animating", action: {
-            Self.animationTask?.cancel()
-            Self.animationTask = nil
-            index = 0
-            set(text: "")
+        Button("Start Animating", action: startAnimating)
+    }
+    
+    func startAnimating() {
+        Self.animationTask?.cancel()
+        Self.animationTask = nil
+        index = 0
+        set(text: "")
+        
+        Self.animationTask = Task {
+            var trackedString = ""
             
-            Self.animationTask = Task {
-                var trackedString = ""
-                
-                for char in Array(Self.data) {
-                    let scalar = char.unicodeScalars
-                    let uInt = scalar[scalar.startIndex].value
-                    for character in disassembleUnicode(uInt) {
-                        do {
-                            if character == "\n" {
-                                try await Task.sleep(for: .seconds(0.2))
-                            } else {
-                                try await Task.sleep(for: .seconds(0.025))
-                            }
-                        } catch is CancellationError {
-                            return
-                        }
-                        
+            for char in Array(Self.data) {
+                let scalar = char.unicodeScalars
+                let uInt = scalar[scalar.startIndex].value
+                for character in disassembleUnicode(uInt) {
+                    do {
                         if character == "\n" {
-                            withAnimation {
-                                index += 1
-                            }
+                            try await Task.sleep(for: .seconds(0.2))
+                        } else {
+                            try await Task.sleep(for: .seconds(0.025))
                         }
-                        
-                        trackedString += "\(character)"
-                        set(text: trackedString)
+                    } catch is CancellationError {
+                        return
                     }
+                    
+                    if character == "\n" {
+                        withAnimation {
+                            index += 1
+                        }
+                    }
+                    
+                    trackedString += "\(character)"
+                    set(text: trackedString)
                 }
             }
-        })
+            
+            isRecording = false
+        }
     }
     
     var captureImageButton: some View {
@@ -126,6 +134,35 @@ struct ContentView: View {
                 }
                 
                 UIImageWriteToSavedPhotosAlbum(transparentImage, nil, nil, nil)
+            }
+        }
+    }
+    
+    var startRecordingButton: some View {
+        Button("Start Recording") {
+            guard isRecording == false else {
+                return
+            }
+            
+            isRecording = true
+            startAnimating()
+            
+            Task { @MainActor in
+                while isRecording {
+                    if let image = imageRenderer.uiImage ,
+                       let transparentImageData = image.pngData(),
+                       let transparentImage = UIImage(data: transparentImageData) {
+                        writer.images.append(transparentImage)
+                    }
+                    
+                    try? await Task.sleep(for: .seconds(1 / 60))
+                }
+                
+                do {
+                    try await writer.render()
+                } catch {
+                    print("Image Writer has responded with error \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -160,14 +197,6 @@ extension ContentView {
                       당신은 사랑받기 위해 태어난 사람
                       당신의 삶속에서 그 사랑 받고 있지요
                       당신은 사랑 받기 위해 태어난 사람
-                      지금도 그 사랑 받고 있지요
-                      태초부터 시작된 하나님의 사랑은
-                      우리의 만남을 통해 열매를 맺고
-                      당신이 이 세상에 존재함으로 인해
-                      우리에  얼마나 큰 기쁨이 되는지
-                      당신은 사랑받기 위해 태어난 사람
-                      지금도 그 사랑 받고 있지요
-                      당신은 사랑받기 위해 태어난 사람
                       지금도 그 사랑 받고 있지요
                       """
 }
