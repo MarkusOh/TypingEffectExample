@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    let writer: ImageAnimator = .init(renderSettings: .init())
+    @State var diskManager = DiskManager()
     
     func set(text: String) {
         guard text.isEmpty == false else {
@@ -27,6 +27,7 @@ struct ContentView: View {
     
     @State private var index = 0
     static var animationTask: Task<Void, Error>?
+    static var recordingTask: Task<Void, Error>?
     
     let renderWidth = 1920.0
     let renderHeight = 1080.0
@@ -86,14 +87,46 @@ struct ContentView: View {
         Button("Start Animating", action: startAnimating)
     }
     
+    var captureImageButton: some View {
+        Button("Capture Image") {
+            Task { @MainActor in
+                guard let image = imageRenderer.uiImage ,
+                      let transparentImageData = image.pngData(),
+                      let transparentImage = UIImage(data: transparentImageData) else {
+                    return
+                }
+                
+                UIImageWriteToSavedPhotosAlbum(transparentImage, nil, nil, nil)
+            }
+        }
+    }
+    
+    var startRecordingButton: some View {
+        Button("\(isRecording ? "Stop" : "Start") Recording") {
+            guard isRecording == false else {
+                stopAnimating()
+                stopRecording()
+                return
+            }
+            
+            startRecording()
+            startAnimating()
+        }
+    }
+    
     func startAnimating() {
-        Self.animationTask?.cancel()
-        Self.animationTask = nil
+        stopAnimating()
         index = 0
         set(text: "")
         
         Self.animationTask = Task {
             var trackedString = ""
+            
+            do {
+                try await Task.sleep(for: .seconds(1))
+            } catch is CancellationError {
+                return
+            }
             
             for char in Array(Self.data) {
                 let scalar = char.unicodeScalars
@@ -124,47 +157,44 @@ struct ContentView: View {
         }
     }
     
-    var captureImageButton: some View {
-        Button("Capture Image") {
-            Task { @MainActor in
-                guard let image = imageRenderer.uiImage ,
-                      let transparentImageData = image.pngData(),
-                      let transparentImage = UIImage(data: transparentImageData) else {
-                    return
+    func startRecording() {
+        isRecording = true
+        
+        Self.recordingTask = Task { @MainActor in
+            do {
+                try diskManager.resetSubdirectory()
+            } catch {
+                print(error.localizedDescription)
+            }
+            
+            while isRecording {
+                if let image = imageRenderer.uiImage ,
+                   let imageData = image.pngData() {
+                    do {
+                        try diskManager.save(imageData: imageData)
+                    } catch {
+                        print(error.localizedDescription)
+                    }
                 }
                 
-                UIImageWriteToSavedPhotosAlbum(transparentImage, nil, nil, nil)
+                do {
+                    try await Task.sleep(for: .seconds(1 / 60))
+                } catch is CancellationError {
+                    return
+                }
             }
         }
     }
     
-    var startRecordingButton: some View {
-        Button("Start Recording") {
-            guard isRecording == false else {
-                return
-            }
-            
-            isRecording = true
-            startAnimating()
-            
-            Task { @MainActor in
-                while isRecording {
-                    if let image = imageRenderer.uiImage ,
-                       let transparentImageData = image.pngData(),
-                       let transparentImage = UIImage(data: transparentImageData) {
-                        writer.images.append(transparentImage)
-                    }
-                    
-                    try? await Task.sleep(for: .seconds(1 / 60))
-                }
-                
-                do {
-                    try await writer.render()
-                } catch {
-                    print("Image Writer has responded with error \(error.localizedDescription)")
-                }
-            }
-        }
+    func stopAnimating() {
+        Self.animationTask?.cancel()
+        Self.animationTask = nil
+    }
+    
+    func stopRecording() {
+        Self.recordingTask?.cancel()
+        Self.recordingTask = nil
+        isRecording = false
     }
 }
 
