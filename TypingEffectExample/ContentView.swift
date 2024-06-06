@@ -8,20 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var text = ""
+    func set(text: String) {
+        guard text.isEmpty == false else {
+            displayableTexts = [UniqueText]()
+            return
+        }
+        
+        for (index, text) in Array(text.components(separatedBy: "\n").enumerated()) {
+            if let displayable = displayableTexts[safe: index] {
+                displayable.text = text
+            } else {
+                displayableTexts.append(.init(text))
+            }
+        }
+    }
+    
     @State private var index = 0
-    @State private var animationTask: Task<Void, Error>?
+    static var animationTask: Task<Void, Error>?
     
     let renderWidth = 1920.0
     let renderHeight = 1080.0
     
-    var displayableTexts: [(Int, String)] {
-        Array(text.components(separatedBy: "\n").enumerated())
-    }
+    @State var displayableTexts = [UniqueText]()
     
     var renderable: some View {
         VerticalCarousel(selectedIndex: index) {
-            ForEach(displayableTexts, id: \.0) { (_, text) in
+            ForEach(displayableTexts) { text in
                 HidableText(text: text)
             }
         }
@@ -52,23 +64,26 @@ struct ContentView: View {
     }
     
     var startAnimatingButton: some View {
-        Button("Start Animating") {
-            if let animationTask {
-                text = ""
-                animationTask.cancel()
-            }
+        Button("Start Animating", action: {
+            Self.animationTask?.cancel()
+            Self.animationTask = nil
+            set(text: "")
             
-            animationTask = Task {
+            Self.animationTask = Task {
                 var trackedString = ""
                 
                 for char in Array(Self.data) {
                     let scalar = char.unicodeScalars
                     let uInt = scalar[scalar.startIndex].value
                     for character in disassembleUnicode(uInt) {
-                        if character == "\n" {
-                            try? await Task.sleep(for: .seconds(0.1))
-                        } else {
-                            try? await Task.sleep(for: .seconds(0.025))
+                        do {
+                            if character == "\n" {
+                                try await Task.sleep(for: .seconds(0.2))
+                            } else {
+                                try await Task.sleep(for: .seconds(0.025))
+                            }
+                        } catch is CancellationError {
+                            return
                         }
                         
                         if character == "\n" {
@@ -78,11 +93,11 @@ struct ContentView: View {
                         }
                         
                         trackedString += "\(character)"
-                        text = trackedString
+                        set(text: trackedString)
                     }
                 }
             }
-        }
+        })
     }
     
     var captureImageButton: some View {
@@ -149,12 +164,12 @@ struct VerticalCarousel: Layout {
     }
     
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let selectedIndex = Self.clamp(value: selectedIndex, to: 1...subviews.count)
+        let selectedIndex = Self.clamp(value: selectedIndex, to: 0...(subviews.count - 1))
         var y = 0.0
         let proposal: ProposedViewSize = .init(width: bounds.width, height: bounds.height)
         
         // get initial y placement
-        for (index, upperSubview) in subviews.prefix(upTo: selectedIndex - 1).enumerated() {
+        for (index, upperSubview) in subviews.prefix(upTo: selectedIndex).enumerated() {
             let size = upperSubview.sizeThatFits(proposal)
             let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
             y -= (size.height / 2 + nextHeight / 2)
@@ -163,7 +178,7 @@ struct VerticalCarousel: Layout {
         // place each subview in vertical order
         for (index, subview) in subviews.enumerated() {
             let size = subview.sizeThatFits(proposal)
-            subview.place(at: .init(x: bounds.minX, y: y + bounds.midY), anchor: .leading, proposal: proposal)
+            subview.place(at: .init(x: bounds.minX, y: y + bounds.maxY), anchor: .bottomLeading, proposal: proposal)
             
             let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
             y += (size.height / 2 + nextHeight / 2)

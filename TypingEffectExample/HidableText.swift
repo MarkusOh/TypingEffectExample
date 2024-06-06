@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
+import Observation
 
 struct HidableText: View {
-    var text: String
+    var text: UniqueText
     
     @State private var isHidden = false
     
     var body: some View {
-        Text(text)
+        Text(text.text)
             .opacity(isHidden ? 0 : 1)
             .overlay {
                 GeometryReader { proxy in
