@@ -16,7 +16,7 @@ struct ContentView: View {
         
         for (index, text) in Array(text.components(separatedBy: "\n").enumerated()) {
             if let displayable = displayableTexts[safe: index] {
-                displayable.text = text
+                displayableTexts[index] = .init(id: displayable.id, text)
             } else {
                 displayableTexts.append(.init(text))
             }
@@ -67,6 +67,7 @@ struct ContentView: View {
         Button("Start Animating", action: {
             Self.animationTask?.cancel()
             Self.animationTask = nil
+            index = 0
             set(text: "")
             
             Self.animationTask = Task {
@@ -164,7 +165,6 @@ struct VerticalCarousel: Layout {
     }
     
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let selectedIndex = Self.clamp(value: selectedIndex, to: 0...(subviews.count - 1))
         var y = 0.0
         let proposal: ProposedViewSize = .init(width: bounds.width, height: bounds.height)
         

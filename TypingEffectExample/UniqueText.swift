@@ -6,14 +6,13 @@
 //
 
 import Foundation
-import Observation
 
-@Observable
-class UniqueText: Identifiable {
-    let id: UUID = .init()
+struct UniqueText: Identifiable {
+    let id: UUID
     var text: String
     
-    init(_ text: String) {
+    init(id: UUID = .init(), _ text: String) {
+        self.id = id
         self.text = text
     }
 }
