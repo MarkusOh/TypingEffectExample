@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.showError) var showError
     @State var diskManager = DiskManager()
     
     func set(text: String) {
@@ -55,14 +56,20 @@ struct ContentView: View {
     var body: some View {
         previewWindow
             .padding(5)
-            .overlay(alignment: .bottom) {
-                VStack {
-                    startAnimatingButton
-                    captureImageButton
-                    startRecordingButton
-                }
+            .overlay(alignment: .trailing) {
+                buttonArray
             }
             .background(Color.black, ignoresSafeAreaEdges: .all)
+    }
+    
+    var buttonArray: some View {
+        VStack {
+            startAnimatingButton
+            captureImageButton
+            startRecordingButton
+        }
+        .fixedSize()
+        .buttonStyle(CustomButtonStyle())
     }
     
     var previewWindow: some View {
@@ -123,7 +130,7 @@ struct ContentView: View {
             var trackedString = ""
             
             do {
-                try await Task.sleep(for: .seconds(1))
+                try await Task.sleep(for: .milliseconds(500))
             } catch is CancellationError {
                 return
             }
@@ -153,18 +160,26 @@ struct ContentView: View {
                 }
             }
             
+            do {
+                try await Task.sleep(for: .milliseconds(500))
+            } catch is CancellationError {
+                return
+            }
+            
             isRecording = false
         }
     }
     
     func startRecording() {
         isRecording = true
+        let errorTitle = "Recording Error"
         
         Self.recordingTask = Task { @MainActor in
             do {
                 try diskManager.resetSubdirectory()
             } catch {
-                print(error.localizedDescription)
+                showError(errorTitle, error)
+                return
             }
             
             while isRecording {
@@ -173,7 +188,8 @@ struct ContentView: View {
                     do {
                         try diskManager.save(imageData: imageData)
                     } catch {
-                        print(error.localizedDescription)
+                        showError(errorTitle, error)
+                        return
                     }
                 }
                 
@@ -183,6 +199,16 @@ struct ContentView: View {
                     return
                 }
             }
+            
+            let url: URL
+            do {
+                url = try await diskManager.createVideo()
+            } catch {
+                showError(errorTitle, error)
+                return
+            }
+            
+            print("Render success! \(url)")
         }
     }
     
@@ -226,8 +252,6 @@ extension ContentView {
     static let data = """
                       당신은 사랑받기 위해 태어난 사람
                       당신의 삶속에서 그 사랑 받고 있지요
-                      당신은 사랑 받기 위해 태어난 사람
-                      지금도 그 사랑 받고 있지요
                       """
 }
 

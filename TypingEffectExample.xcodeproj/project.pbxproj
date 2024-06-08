@@ -14,6 +14,11 @@
 		0D5D79F72C0C91EB00B8A3CF /* HidableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D79F62C0C91EA00B8A3CF /* HidableText.swift */; };
 		0D5D79F92C11650100B8A3CF /* UniqueText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D79F82C11650100B8A3CF /* UniqueText.swift */; };
 		0D5D7A002C11DADD00B8A3CF /* DiskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D79FF2C11DADD00B8A3CF /* DiskManager.swift */; };
+		0D5D7A022C14274C00B8A3CF /* Background.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0D5D7A012C14274C00B8A3CF /* Background.jpg */; };
+		0D5D7A042C142ABE00B8A3CF /* BlurEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A032C142ABE00B8A3CF /* BlurEffectView.swift */; };
+		0D5D7A062C142BBC00B8A3CF /* CustomButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */; };
+		0D5D7A082C14309600B8A3CF /* ShowErrorEnvironmentKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */; };
+		0D5D7A0A2C14315B00B8A3CF /* ErrorWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +30,11 @@
 		0D5D79F62C0C91EA00B8A3CF /* HidableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidableText.swift; sourceTree = "<group>"; };
 		0D5D79F82C11650100B8A3CF /* UniqueText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniqueText.swift; sourceTree = "<group>"; };
 		0D5D79FF2C11DADD00B8A3CF /* DiskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskManager.swift; sourceTree = "<group>"; };
+		0D5D7A012C14274C00B8A3CF /* Background.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = Background.jpg; sourceTree = "<group>"; };
+		0D5D7A032C142ABE00B8A3CF /* BlurEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurEffectView.swift; sourceTree = "<group>"; };
+		0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButtonStyle.swift; sourceTree = "<group>"; };
+		0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowErrorEnvironmentKey.swift; sourceTree = "<group>"; };
+		0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorWrapper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,11 +68,16 @@
 			isa = PBXGroup;
 			children = (
 				0D0F19CE2C02250600068979 /* TypingEffectExampleApp.swift */,
+				0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */,
+				0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */,
 				0D0F19D02C02250600068979 /* ContentView.swift */,
+				0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */,
 				0D5D79F62C0C91EA00B8A3CF /* HidableText.swift */,
 				0D5D79F82C11650100B8A3CF /* UniqueText.swift */,
 				0D5D79FF2C11DADD00B8A3CF /* DiskManager.swift */,
+				0D5D7A032C142ABE00B8A3CF /* BlurEffectView.swift */,
 				0D0F19D22C02250800068979 /* Assets.xcassets */,
+				0D5D7A012C14274C00B8A3CF /* Background.jpg */,
 				0D0F19D42C02250800068979 /* Preview Content */,
 			);
 			path = TypingEffectExample;
@@ -136,6 +151,7 @@
 			files = (
 				0D0F19D62C02250800068979 /* Preview Assets.xcassets in Resources */,
 				0D0F19D32C02250800068979 /* Assets.xcassets in Resources */,
+				0D5D7A022C14274C00B8A3CF /* Background.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,9 +163,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D0F19D12C02250600068979 /* ContentView.swift in Sources */,
+				0D5D7A082C14309600B8A3CF /* ShowErrorEnvironmentKey.swift in Sources */,
 				0D0F19CF2C02250600068979 /* TypingEffectExampleApp.swift in Sources */,
+				0D5D7A0A2C14315B00B8A3CF /* ErrorWrapper.swift in Sources */,
+				0D5D7A042C142ABE00B8A3CF /* BlurEffectView.swift in Sources */,
 				0D5D7A002C11DADD00B8A3CF /* DiskManager.swift in Sources */,
 				0D5D79F72C0C91EB00B8A3CF /* HidableText.swift in Sources */,
+				0D5D7A062C142BBC00B8A3CF /* CustomButtonStyle.swift in Sources */,
 				0D5D79F92C11650100B8A3CF /* UniqueText.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

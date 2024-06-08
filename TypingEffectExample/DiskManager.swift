@@ -1,9 +1,13 @@
 import UIKit
+import AVFoundation
 
 class DiskManager {
     enum E: Error {
         case directoryAccessFailed,
-             creatingSubdirectoryFailed(Error)
+             creatingSubdirectoryFailed(Error),
+             imageNotFoundAtIndex(Int),
+             imageNotFound(URL),
+             pixelBufferCreationFailed
     }
     
     static var documentDirectoryURL: URL? {
@@ -43,14 +47,51 @@ class DiskManager {
         }
     }
     
+    static func image(at index: Int) throws -> CIImage {
+        let subdirectoryURL = try Self.customSubdirectory
+        let fileManager = FileManager.default
+        let fileURLs = try fileManager.contentsOfDirectory(at: subdirectoryURL, includingPropertiesForKeys: nil)
+        
+        // Define the index pattern to match
+        let indexPattern = String(format: "-%03d.png", index)
+        
+        // Find the file URL with the matching index
+        guard let fileURL = fileURLs.first(where: { $0.lastPathComponent.contains(indexPattern) }) else {
+            throw E.imageNotFoundAtIndex(index)
+        }
+        
+        let imageData = try Data(contentsOf: fileURL)
+        
+        guard let image = CIImage(data: imageData) else {
+            throw E.imageNotFound(fileURL)
+        }
+        
+        return image
+    }
+    
     static func removeAllImages(in url: URL) throws {
         let fileManager = FileManager.default
         let fileURLs = try fileManager.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
         
+        let imageExtensions: Set<String> = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "heic"]
+
         for fileURL in fileURLs {
-            try fileManager.removeItem(at: fileURL)
+            let fileExtension = fileURL.pathExtension.lowercased()
+            if imageExtensions.contains(fileExtension) {
+                try fileManager.removeItem(at: fileURL)
+            }
         }
     }
+
+    static func remove(fileURL url: URL) throws {
+        let fileManager = FileManager.default
+        
+        let fileExists = FileManager.default.fileExists(atPath: url.path(percentEncoded: false), isDirectory: nil)
+        if fileExists {
+            try fileManager.removeItem(at: url)
+        }
+    }
+
     
     static func createNewCustomDate() -> String {
         let dateFormatter = DateFormatter()
@@ -83,5 +124,90 @@ class DiskManager {
         let fileName = "\(customDate)-Image-\(String(format: "%03d", customIndex)).png"
         let fileURL = subdirectoryURL.appendingPathComponent(fileName)
         try imageData.write(to: fileURL)
+    }
+    
+    let context = CIContext()
+    let background = {
+        let url = Bundle.main.bundleURL.appending(path: "Background.jpg")
+        let data = try! Data(contentsOf: url)
+        return CIImage(data: data)!
+    }()
+    
+    func getPixelBufferForImage(at index: Int) throws -> CVPixelBuffer {
+        let staticImage = try Self.image(at: index)
+        let finalImage = staticImage.composited(over: background)
+        
+        var pixelBuffer: CVPixelBuffer?
+        let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
+             kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
+        let width = Int(finalImage.extent.size.width)
+        let height = Int(finalImage.extent.size.height)
+        CVPixelBufferCreate(kCFAllocatorDefault,
+                            width,
+                            height,
+                            kCVPixelFormatType_32BGRA,
+                            attrs,
+                            &pixelBuffer)
+        
+        guard let pixelBuffer = pixelBuffer else {
+            throw E.pixelBufferCreationFailed
+        }
+        
+        context.render(finalImage, to: pixelBuffer)
+        return pixelBuffer
+    }
+    
+    func createVideo() async throws -> URL {
+        let outputMovieURL = try Self.customSubdirectory.appendingPathComponent("TypingVideoResult.mov")
+        try Self.remove(fileURL: outputMovieURL)
+        
+        let assetwriter = try AVAssetWriter(outputURL: outputMovieURL, fileType: .mov)
+        
+        let settingsAssistant = AVOutputSettingsAssistant(preset: .preset1920x1080)?.videoSettings
+        let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settingsAssistant)
+        let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: nil)
+        assetwriter.add(assetWriterInput)
+        
+        assetwriter.startWriting()
+        assetwriter.startSession(atSourceTime: CMTime.zero)
+        
+        let framesPerSecond = 60
+        let totalFrames = customIndex
+        var frameCount = 0
+        while frameCount < totalFrames {
+          if assetWriterInput.isReadyForMoreMediaData {
+            let frameTime = CMTimeMake(value: Int64(frameCount), timescale: Int32(framesPerSecond))
+            assetWriterAdaptor.append(try getPixelBufferForImage(at: frameCount), withPresentationTime: frameTime)
+            frameCount+=1
+          }
+        }
+        
+        // close everything
+        assetWriterInput.markAsFinished()
+        
+        try DiskManager.removeAllImages(in: DiskManager.customSubdirectory)
+        
+        return await withCheckedContinuation { (continuation: CheckedContinuation<URL, Never>) in
+            assetwriter.finishWriting {
+                continuation.resume(returning: outputMovieURL)
+            }
+        }
+    }
+}
+
+extension DiskManager.E: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .directoryAccessFailed:
+            return "Directory access failed"
+        case .creatingSubdirectoryFailed(let error):
+            return "Creating subdirectory failed: \(error.localizedDescription)"
+        case .imageNotFoundAtIndex(let index):
+            return "Image is not found at the index \(index)"
+        case .imageNotFound(let url):
+            return "Image is not found at \(url.absoluteString)"
+        case .pixelBufferCreationFailed:
+            return "Pixel buffer creation failed"
+        }
     }
 }
