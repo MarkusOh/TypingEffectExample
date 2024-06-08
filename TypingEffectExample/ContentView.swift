@@ -35,6 +35,11 @@ struct ContentView: View {
     
     @State var displayableTexts = [UniqueText]()
     @State var isRecording = false
+    @State var result: URL?
+    @State var data = """
+                      당신은 사랑받기 위해 태어난 사람
+                      당신의 삶속에서 그 사랑 받고 있지요
+                      """
     
     var renderable: some View {
         VerticalCarousel(selectedIndex: index) {
@@ -54,16 +59,22 @@ struct ContentView: View {
     }
     
     var body: some View {
-        previewWindow
-            .padding(5)
-            .overlay(alignment: .trailing) {
-                buttonArray
-            }
-            .background(Color.black, ignoresSafeAreaEdges: .all)
+        NavigationStack {
+            previewWindow
+                .padding(5)
+                .overlay(alignment: .trailing) {
+                    buttonArray
+                }
+                .background(Color.black, ignoresSafeAreaEdges: .all)
+                .sheet(item: $result) { videoResult in
+                    ShareView(sharable: videoResult)
+                }
+        }
     }
     
     var buttonArray: some View {
         VStack {
+            setTextButton
             startAnimatingButton
             captureImageButton
             startRecordingButton
@@ -87,6 +98,12 @@ struct ContentView: View {
                 .padding(borderOffset)
                 .border(isRecording ? Color.red : .gray, width: borderOffset)
                 .scaleEffect(x: adjustedWidth, y: adjustedHeight, anchor: .topLeading)
+        }
+    }
+    
+    var setTextButton: some View {
+        NavigationLink("Set Text to Animate") {
+            SetTextToAnimateView(textToAnimate: $data)
         }
     }
     
@@ -135,7 +152,7 @@ struct ContentView: View {
                 return
             }
             
-            for char in Array(Self.data) {
+            for char in Array(data) {
                 let scalar = char.unicodeScalars
                 let uInt = scalar[scalar.startIndex].value
                 for character in disassembleUnicode(uInt) {
@@ -208,7 +225,7 @@ struct ContentView: View {
                 return
             }
             
-            print("Render success! \(url)")
+            result = url
         }
     }
     
@@ -247,51 +264,6 @@ extension ContentView {
         }
         
         return arr
-    }
-    
-    static let data = """
-                      당신은 사랑받기 위해 태어난 사람
-                      당신의 삶속에서 그 사랑 받고 있지요
-                      """
-}
-
-struct VerticalCarousel: Layout {
-    var selectedIndex: Int
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        proposal.replacingUnspecifiedDimensions()
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var y = 0.0
-        let proposal: ProposedViewSize = .init(width: bounds.width, height: bounds.height)
-        
-        // get initial y placement
-        for (index, upperSubview) in subviews.prefix(upTo: selectedIndex).enumerated() {
-            let size = upperSubview.sizeThatFits(proposal)
-            let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
-            y -= (size.height / 2 + nextHeight / 2)
-        }
-        
-        // place each subview in vertical order
-        for (index, subview) in subviews.enumerated() {
-            let size = subview.sizeThatFits(proposal)
-            subview.place(at: .init(x: bounds.minX, y: y + bounds.maxY), anchor: .bottomLeading, proposal: proposal)
-            
-            let nextHeight = subviews[safe: index + 1]?.sizeThatFits(proposal).height ?? .zero
-            y += (size.height / 2 + nextHeight / 2)
-        }
-    }
-    
-    static func clamp(value: Int, to limits: ClosedRange<Int>) -> Int {
-        return min(max(value, limits.lowerBound), limits.upperBound)
-    }
-}
-
-extension Collection {
-    /// Returns the element at the specified index if it is within bounds, otherwise nil.
-    subscript (safe index: Index) -> Element? {
-        return indices.contains(index) ? self[index] : nil
     }
 }
 

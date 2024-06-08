@@ -19,6 +19,10 @@
 		0D5D7A062C142BBC00B8A3CF /* CustomButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */; };
 		0D5D7A082C14309600B8A3CF /* ShowErrorEnvironmentKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */; };
 		0D5D7A0A2C14315B00B8A3CF /* ErrorWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */; };
+		0D5D7A0C2C14399F00B8A3CF /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A0B2C14399F00B8A3CF /* ShareView.swift */; };
+		0D5D7A0E2C143A4700B8A3CF /* URL+Identifiable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A0D2C143A4700B8A3CF /* URL+Identifiable.swift */; };
+		0D5D7A102C143CE500B8A3CF /* VerticalCarousel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A0F2C143CE500B8A3CF /* VerticalCarousel.swift */; };
+		0D5D7A122C1440F600B8A3CF /* SetTextToAnimateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D5D7A112C1440F600B8A3CF /* SetTextToAnimateView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +39,10 @@
 		0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButtonStyle.swift; sourceTree = "<group>"; };
 		0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowErrorEnvironmentKey.swift; sourceTree = "<group>"; };
 		0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorWrapper.swift; sourceTree = "<group>"; };
+		0D5D7A0B2C14399F00B8A3CF /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
+		0D5D7A0D2C143A4700B8A3CF /* URL+Identifiable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Identifiable.swift"; sourceTree = "<group>"; };
+		0D5D7A0F2C143CE500B8A3CF /* VerticalCarousel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalCarousel.swift; sourceTree = "<group>"; };
+		0D5D7A112C1440F600B8A3CF /* SetTextToAnimateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetTextToAnimateView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,11 +79,15 @@
 				0D5D7A092C14315B00B8A3CF /* ErrorWrapper.swift */,
 				0D5D7A072C14309600B8A3CF /* ShowErrorEnvironmentKey.swift */,
 				0D0F19D02C02250600068979 /* ContentView.swift */,
+				0D5D7A112C1440F600B8A3CF /* SetTextToAnimateView.swift */,
+				0D5D7A0F2C143CE500B8A3CF /* VerticalCarousel.swift */,
+				0D5D7A0B2C14399F00B8A3CF /* ShareView.swift */,
 				0D5D7A052C142BBC00B8A3CF /* CustomButtonStyle.swift */,
 				0D5D79F62C0C91EA00B8A3CF /* HidableText.swift */,
 				0D5D79F82C11650100B8A3CF /* UniqueText.swift */,
 				0D5D79FF2C11DADD00B8A3CF /* DiskManager.swift */,
 				0D5D7A032C142ABE00B8A3CF /* BlurEffectView.swift */,
+				0D5D7A0D2C143A4700B8A3CF /* URL+Identifiable.swift */,
 				0D0F19D22C02250800068979 /* Assets.xcassets */,
 				0D5D7A012C14274C00B8A3CF /* Background.jpg */,
 				0D0F19D42C02250800068979 /* Preview Content */,
@@ -162,13 +174,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D5D7A0C2C14399F00B8A3CF /* ShareView.swift in Sources */,
+				0D5D7A0E2C143A4700B8A3CF /* URL+Identifiable.swift in Sources */,
 				0D0F19D12C02250600068979 /* ContentView.swift in Sources */,
+				0D5D7A122C1440F600B8A3CF /* SetTextToAnimateView.swift in Sources */,
 				0D5D7A082C14309600B8A3CF /* ShowErrorEnvironmentKey.swift in Sources */,
 				0D0F19CF2C02250600068979 /* TypingEffectExampleApp.swift in Sources */,
 				0D5D7A0A2C14315B00B8A3CF /* ErrorWrapper.swift in Sources */,
 				0D5D7A042C142ABE00B8A3CF /* BlurEffectView.swift in Sources */,
 				0D5D7A002C11DADD00B8A3CF /* DiskManager.swift in Sources */,
 				0D5D79F72C0C91EB00B8A3CF /* HidableText.swift in Sources */,
+				0D5D7A102C143CE500B8A3CF /* VerticalCarousel.swift in Sources */,
 				0D5D7A062C142BBC00B8A3CF /* CustomButtonStyle.swift in Sources */,
 				0D5D79F92C11650100B8A3CF /* UniqueText.swift in Sources */,
 			);
@@ -311,8 +327,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -342,8 +357,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
