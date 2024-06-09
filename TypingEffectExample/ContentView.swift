@@ -79,9 +79,12 @@ struct ContentView: View {
     
     @ViewBuilder var renderProgressView: some View {
         if rendering {
+            let padding = 15.0
+            
             ProgressView("Rendering in Progress...")
-                .padding()
+                .padding(padding)
                 .background(BlurEffectView(effect: UIBlurEffect(style: .systemMaterial)))
+                .clipShape(RoundedRectangle(cornerRadius: padding))
         }
     }
     
