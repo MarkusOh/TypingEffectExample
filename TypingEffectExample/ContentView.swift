@@ -114,11 +114,13 @@ struct ContentView: View {
     var captureImageButton: some View {
         Button("Capture Image") {
             Task { @MainActor in
-                guard let image = imageRenderer.uiImage else {
+                guard let image = imageRenderer.uiImage,
+                      let transparentImageData = image.pngData(),
+                      let transparentImage = UIImage(data: transparentImageData) else {
                     return
                 }
                 
-                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                UIImageWriteToSavedPhotosAlbum(transparentImage, nil, nil, nil)
             }
         }
     }
@@ -198,7 +200,8 @@ struct ContentView: View {
             }
             
             while isRecording {
-                if let imageData = imageRenderer.uiImage?.jpegData(compressionQuality: 0.8) {
+                if let image = imageRenderer.uiImage,
+                   let imageData = image.pngData() {
                     do {
                         try diskManager.save(imageData: imageData)
                     } catch {

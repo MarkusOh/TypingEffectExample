@@ -53,7 +53,7 @@ class DiskManager {
         let fileURLs = try fileManager.contentsOfDirectory(at: subdirectoryURL, includingPropertiesForKeys: nil)
         
         // Define the index pattern to match
-        let indexPattern = String(format: "-%03d.jpg", index)
+        let indexPattern = String(format: "-%03d.png", index)
         
         // Find the file URL with the matching index
         guard let fileURL = fileURLs.first(where: { $0.lastPathComponent.contains(indexPattern) }) else {
@@ -121,7 +121,7 @@ class DiskManager {
     
     func save(imageData: Data) throws {
         let subdirectoryURL = try Self.customSubdirectory
-        let fileName = "\(customDate)-Image-\(String(format: "%03d", customIndex)).jpg"
+        let fileName = "\(customDate)-Image-\(String(format: "%03d", customIndex)).png"
         let fileURL = subdirectoryURL.appendingPathComponent(fileName)
         try imageData.write(to: fileURL)
     }
