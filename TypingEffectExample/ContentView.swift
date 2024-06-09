@@ -65,10 +65,23 @@ struct ContentView: View {
                 .overlay(alignment: .trailing) {
                     buttonArray
                 }
+                .overlay(alignment: .topTrailing) {
+                    renderProgressView
+                }
                 .background(Color.black, ignoresSafeAreaEdges: .all)
                 .sheet(item: $result) { videoResult in
                     ShareView(sharable: videoResult)
                 }
+        }
+    }
+    
+    @State private var rendering = false
+    
+    @ViewBuilder var renderProgressView: some View {
+        if rendering {
+            ProgressView("Rendering in Progress...")
+                .padding()
+                .background(BlurEffectView(effect: UIBlurEffect(style: .systemMaterial)))
         }
     }
     
@@ -217,14 +230,18 @@ struct ContentView: View {
                 }
             }
             
+            rendering = true
+            
             let url: URL
             do {
                 url = try await diskManager.createVideo()
             } catch {
                 showError(errorTitle, error)
+                rendering = false
                 return
             }
             
+            rendering = false
             result = url
         }
     }
