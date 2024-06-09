@@ -134,27 +134,31 @@ class DiskManager {
     }()
     
     func getPixelBufferForImage(at index: Int) throws -> CVPixelBuffer {
-        let staticImage = try Self.image(at: index)
-        let finalImage = staticImage.composited(over: background)
-        
         var pixelBuffer: CVPixelBuffer?
-        let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
-             kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
-        let width = Int(finalImage.extent.size.width)
-        let height = Int(finalImage.extent.size.height)
-        CVPixelBufferCreate(kCFAllocatorDefault,
-                            width,
-                            height,
-                            kCVPixelFormatType_32BGRA,
-                            attrs,
-                            &pixelBuffer)
         
-        guard let pixelBuffer = pixelBuffer else {
-            throw E.pixelBufferCreationFailed
+        try autoreleasepool {
+            let staticImage = try Self.image(at: index)
+            let finalImage = staticImage.composited(over: background)
+            
+            let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
+                 kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
+            let width = Int(finalImage.extent.size.width)
+            let height = Int(finalImage.extent.size.height)
+            CVPixelBufferCreate(kCFAllocatorDefault,
+                                width,
+                                height,
+                                kCVPixelFormatType_32BGRA,
+                                attrs,
+                                &pixelBuffer)
+            
+            guard let pixelBuffer = pixelBuffer else {
+                throw E.pixelBufferCreationFailed
+            }
+            
+            context.render(finalImage, to: pixelBuffer)
         }
         
-        context.render(finalImage, to: pixelBuffer)
-        return pixelBuffer
+        return pixelBuffer!
     }
     
     func createVideo() async throws -> URL {
