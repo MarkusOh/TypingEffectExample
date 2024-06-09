@@ -158,9 +158,9 @@ struct ContentView: View {
                 for character in disassembleUnicode(uInt) {
                     do {
                         if character == "\n" {
-                            try await Task.sleep(for: .seconds(0.2))
+                            try await Task.sleep(for: .milliseconds(500))
                         } else {
-                            try await Task.sleep(for: .seconds(0.025))
+                            try await Task.sleep(for: .milliseconds(50))
                         }
                     } catch is CancellationError {
                         return

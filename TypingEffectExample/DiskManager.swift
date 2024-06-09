@@ -2,6 +2,9 @@ import UIKit
 import AVFoundation
 
 class DiskManager {
+    static let width = 1920
+    static let height = 1080
+    
     enum E: Error {
         case directoryAccessFailed,
              creatingSubdirectoryFailed(Error),
@@ -133,23 +136,14 @@ class DiskManager {
         return CIImage(data: data)!
     }()
     
-    func getPixelBufferForImage(at index: Int) throws -> CVPixelBuffer {
+    func getPixelBufferForImage(at index: Int, pool: CVPixelBufferPool) throws -> CVPixelBuffer {
         var pixelBuffer: CVPixelBuffer?
         
         try autoreleasepool {
             let staticImage = try Self.image(at: index)
             let finalImage = staticImage.composited(over: background)
             
-            let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
-                 kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
-            let width = Int(finalImage.extent.size.width)
-            let height = Int(finalImage.extent.size.height)
-            CVPixelBufferCreate(kCFAllocatorDefault,
-                                width,
-                                height,
-                                kCVPixelFormatType_32BGRA,
-                                attrs,
-                                &pixelBuffer)
+            CVPixelBufferPoolCreatePixelBuffer(nil, pool, &pixelBuffer)
             
             guard let pixelBuffer = pixelBuffer else {
                 throw E.pixelBufferCreationFailed
@@ -167,9 +161,29 @@ class DiskManager {
         
         let assetwriter = try AVAssetWriter(outputURL: outputMovieURL, fileType: .mov)
         
-        let settingsAssistant = AVOutputSettingsAssistant(preset: .preset1920x1080)?.videoSettings
-        let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settingsAssistant)
-        let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: nil)
+        let settings = [
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: 15000000,
+                AVVideoExpectedSourceFrameRateKey: 60,
+                AVVideoH264EntropyModeKey: AVVideoH264EntropyModeCABAC,
+                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+            ],
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey : Self.width,
+            AVVideoHeightKey: Self.height,
+            AVVideoScalingModeKey: AVVideoScalingModeResizeAspect,
+        ] as [String : Any]
+        let assetWriterInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
+        
+        let attributes = [
+            kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue!,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue!,
+            kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey: Self.width,
+            kCVPixelBufferHeightKey: Self.height,
+        ] as Dictionary<String, Any>
+        
+        let assetWriterAdaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterInput, sourcePixelBufferAttributes: attributes)
         assetwriter.add(assetWriterInput)
         
         assetwriter.startWriting()
@@ -181,7 +195,8 @@ class DiskManager {
         while frameCount < totalFrames {
           if assetWriterInput.isReadyForMoreMediaData {
             let frameTime = CMTimeMake(value: Int64(frameCount), timescale: Int32(framesPerSecond))
-            assetWriterAdaptor.append(try getPixelBufferForImage(at: frameCount), withPresentationTime: frameTime)
+              let pixelBuffer = try getPixelBufferForImage(at: frameCount, pool: assetWriterAdaptor.pixelBufferPool!)
+            assetWriterAdaptor.append(pixelBuffer, withPresentationTime: frameTime)
             frameCount+=1
           }
         }
