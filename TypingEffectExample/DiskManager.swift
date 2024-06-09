@@ -52,17 +52,10 @@ class DiskManager {
     
     static func image(at index: Int) throws -> CIImage {
         let subdirectoryURL = try Self.customSubdirectory
-        let fileManager = FileManager.default
-        let fileURLs = try fileManager.contentsOfDirectory(at: subdirectoryURL, includingPropertiesForKeys: nil)
         
         // Define the index pattern to match
-        let indexPattern = String(format: "-%03d.png", index)
-        
-        // Find the file URL with the matching index
-        guard let fileURL = fileURLs.first(where: { $0.lastPathComponent.contains(indexPattern) }) else {
-            throw E.imageNotFoundAtIndex(index)
-        }
-        
+        let fileName = String(format: "Image-\(index)")
+        let fileURL = subdirectoryURL.appendingPathComponent(fileName, conformingTo: .png)
         let imageData = try Data(contentsOf: fileURL)
         
         guard let image = CIImage(data: imageData) else {
@@ -103,10 +96,6 @@ class DiskManager {
         return dateString
     }
     
-    lazy var customDate: String = {
-        Self.createNewCustomDate()
-    }()
-    
     var _customIndex = 0
     var customIndex: Int {
         defer {
@@ -118,13 +107,12 @@ class DiskManager {
     
     func resetSubdirectory() throws {
         _customIndex = 0
-        customDate = Self.createNewCustomDate()
         try Self.removeAllImages(in: Self.customSubdirectory)
     }
     
     func save(imageData: Data) throws {
         let subdirectoryURL = try Self.customSubdirectory
-        let fileName = "\(customDate)-Image-\(String(format: "%03d", customIndex)).png"
+        let fileName = "Image-\(customIndex).png"
         let fileURL = subdirectoryURL.appendingPathComponent(fileName)
         try imageData.write(to: fileURL)
     }
