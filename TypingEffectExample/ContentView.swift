@@ -49,8 +49,8 @@ struct ContentView: View {
         }
         .font(.system(size: 60).bold())
         .frame(width: renderWidth, height: renderHeight)
-        .foregroundStyle(Color.black)
-        .background(Color.clear)
+        .foregroundStyle(Color.white)
+        .background(Color.black)
     }
     
     @MainActor
